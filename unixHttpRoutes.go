@@ -84,6 +84,8 @@ func AddProcessRoutes(router *httprouter.Router) {
 
 	router.POST("/reboot", handleReboot)
 	router.POST("/shutdown", handleShutdown)
+
+	router.GET("/logConfig", handleGetAllLogConfigs)
 }
 
 var startTime time.Time
@@ -438,6 +440,10 @@ func handleJobOp(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 func handleGetTaskStatus(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	defer r.Body.Close()
 
+}
+
+func handleGetAllLogConfigs(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	defer r.Body.Close()
 }
 
 func handleAllJobStatus(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
