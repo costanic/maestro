@@ -11,7 +11,7 @@
     Copyright (c) 2019, Arm Limited and affiliates.
 
     SPDX-License-Identifier: MIT
-    
+
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
     in the Software without restriction, including without limitation the rights
@@ -238,9 +238,9 @@ struct uint64_t_eqstrP {
 const int MAX_IF_NAME_LEN = 16;
 
 
-class GreaseLogger 
+class GreaseLogger
 #ifndef GREASE_LIB
-	: public Nan::ObjectWrap 
+	: public Nan::ObjectWrap
 #endif
 {
 public:
@@ -849,12 +849,12 @@ protected:
 	protected:
 #ifndef GREASE_LIB
 		Persistent<Function> onNewConnCB;
-#endif		
+#endif
 	public:
 
-		Sink() 
+		Sink()
 #ifndef GREASE_LIB
-		: onNewConnCB() 
+		: onNewConnCB()
 #endif
 		{}
 
@@ -1305,10 +1305,10 @@ protected:
 #endif
 
 								int r = recv_cnt;
-								if(l->_grabInLogBuffer(entry) == GREASE_OK) {									
+								if(l->_grabInLogBuffer(entry) == GREASE_OK) {
 									if(GreaseLogger::parse_single_syslog_to_singleLog((char *) iov[iov_n].iov_base, r, state, entry)) {
 										entry->incRef();
-										l->_submitBuffer(entry);										
+										l->_submitBuffer(entry);
 									} else {
 										if(state == SYSLOG_INVALID) {
 											DBG_OUT("Invalid syslog state! (iovec recvmsg() call)");
@@ -2571,21 +2571,21 @@ protected:
 //			work.data = this;
 		}
 		nodeCmdReq(nodeCmdReq &) = delete;
-		nodeCmdReq() : cmd(nodeCommand::NOOP), _errno(0), 
+		nodeCmdReq() : cmd(nodeCommand::NOOP), _errno(0),
 #ifndef GREASE_LIB
-		callback(), 
-#endif		
+		callback(),
+#endif
 		self(NULL) {}
-		nodeCmdReq(nodeCmdReq &&o) :cmd(o.cmd), _errno(o._errno), 
+		nodeCmdReq(nodeCmdReq &&o) :cmd(o.cmd), _errno(o._errno),
 #ifndef GREASE_LIB
-		callback(NULL), 
-#endif		
+		callback(NULL),
+#endif
 		self(o.self) {
 #ifndef GREASE_LIB
 			if(o.callback) {
 				callback = o.callback; o.callback = NULL;
 			}
-#endif			
+#endif
 		};
 		nodeCmdReq& operator=(nodeCmdReq&& o) {
 			cmd = o.cmd;
@@ -2594,7 +2594,7 @@ protected:
 			if(o.callback) {
 				callback = o.callback; o.callback = NULL;
 			}
-#endif			
+#endif
 			return *this;
 		}
 	};
@@ -3742,7 +3742,7 @@ protected:
 				HEAVY_DBG_OUT("rotation: current file %s is %d bytes\n",myPath,req.statbuf.st_size);
 				if(filerotation.max_file_size && filerotation.max_file_size < req.statbuf.st_size) {
 					needs_rotation = true;
-					HEAVY_DBG_OUT("rotation: current files needs rotation.\n");					
+					HEAVY_DBG_OUT("rotation: current files needs rotation.\n");
 				}
 
 				all_files_size += req.statbuf.st_size;
@@ -3811,7 +3811,7 @@ protected:
 					if(needs_rotate || filerotation.rotate_on_start) {
 						HEAVY_DBG_OUT("Needs rotate....\n");
 						if (filerotation.rotate_on_start) {
-							// ok - need to preload the list of existing log files.							
+							// ok - need to preload the list of existing log files.
 						}
 						rotate_files();
 					}
@@ -4028,6 +4028,78 @@ protected:
 		return ret;
 	}
 
+	bool _deleteFilter(OriginId origin, TagId tag, FilterId id) {
+        bool removed = false;
+		uint64_t hash = 0;
+		FilterList *list = NULL;
+
+		hash = filterhash(tag,origin);
+
+		uv_mutex_lock(&modifyFilters);
+		if (filterHashTable.find(hash, list)) {
+            Filter *filter = NULL;
+			list->find(id, filter);
+            if (filter) {
+                removed = true;
+                // remove the filter by replacing the filter list with a new list
+                // that doesn't contain the deleted filter.
+                // we do it this way because we can't delete from a bloom filter.
+                FilterList *replacement = new FilterList();
+                for (int i = 0; i < MAX_IDENTICAL_FILTERS; ++i) {
+                    if (list->list[i].id != 0 && list->list[i].id != id) {
+		                replacement->add(list->list[i]);
+                    }
+                }
+			    filterHashTable.addReplace(hash, replacement);
+            }
+		}
+		uv_mutex_unlock(&modifyFilters);
+
+        return removed;
+    }
+
+	bool _modifyFilter(OriginId origin, TagId tag, FilterId id, LevelMask level,
+			logLabel *preformat = nullptr, logLabel *postformatpremsg = nullptr, logLabel *postformat = nullptr) {
+        bool modified = false;
+		uint64_t hash = 0;
+		FilterList *list = NULL;
+
+		hash = filterhash(tag, origin);
+
+		uv_mutex_lock(&modifyFilters);
+		if (filterHashTable.find(hash, list)) {
+            Filter *filter = NULL;
+			list->find(id, filter);
+            if (filter) {
+                modified = true;
+                FilterList *replacement = new FilterList();
+                // modify the filter by replacing the filter list with a new list
+                // that contains all non-matching filters, plus a copy of the
+                // to-be-modified filter with appropriate fields changed.
+                // we do it this way because we can't delete from a bloom filter.
+                for (int i = 0; i < MAX_IDENTICAL_FILTERS; ++i) {
+                    if (list->list[i].id != 0 && list->list[i].id != id) {
+		                replacement->add(list->list[i]);
+                    }
+                }
+                // create a new filter with the same id and target, but with modified
+                // level and message formats.
+                Filter f(filter->id, level, filter->targetId);
+                if (preformat && !preformat->empty())
+                    f.preFormat = *preformat;
+                if (postformatpremsg && !postformatpremsg->empty())
+                    f.postFormatPreMsg = *postformatpremsg;
+                if (postformat && !postformat->empty())
+                    f.postFormat = *postformat;
+                replacement->add(f);
+			    filterHashTable.addReplace(hash, replacement);
+            }
+		}
+		uv_mutex_unlock(&modifyFilters);
+
+        return modified;
+    }
+
 	bool _lookupFilter(OriginId origin, TagId tag, FilterId id, Filter *&filter) {
 		uint64_t hash = filterhash(tag,origin);
 		bool ret = false;
@@ -4165,8 +4237,10 @@ protected:
 	LIB_METHOD_SYNC_FRIEND(maskOutByLevel, uint32_t val);
 	LIB_METHOD_SYNC_FRIEND(unmaskOutByLevel, uint32_t val);
 	LIB_METHOD_SYNC_FRIEND(addFilter,GreaseLibFilter *filter);
+	LIB_METHOD_SYNC_FRIEND(modifyFilter,GreaseLibFilter *filter);
 	LIB_METHOD_SYNC_FRIEND(disableFilter,GreaseLibFilter *filter);
 	LIB_METHOD_SYNC_FRIEND(enableFilter,GreaseLibFilter *filter);
+	LIB_METHOD_SYNC_FRIEND(deleteFilter,GreaseLibFilter *filter);
 	LIB_METHOD_SYNC_FRIEND(addSink,GreaseLibSink *sink);
 	LIB_METHOD_SYNC_FRIEND(disableTarget, TargetId id);
 	LIB_METHOD_SYNC_FRIEND(enableTarget, TargetId id);

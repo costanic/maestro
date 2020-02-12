@@ -14,7 +14,7 @@
     Copyright (c) 2019, Arm Limited and affiliates.
 
     SPDX-License-Identifier: MIT
-    
+
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
     in the Software without restriction, including without limitation the rights
@@ -228,6 +228,8 @@ void GreaseLib_setvalue_GreaseLibFilter(GreaseLibFilter *opts,uint32_t flag,uint
 LIB_METHOD_SYNC(addFilter,GreaseLibFilter *filter);
 LIB_METHOD_SYNC(disableFilter,GreaseLibFilter *filter);
 LIB_METHOD_SYNC(enableFilter,GreaseLibFilter *filter);
+LIB_METHOD_SYNC(modifyFilter,GreaseLibFilter *filter);
+LIB_METHOD_SYNC(deleteFilter,GreaseLibFilter *filter);
 //LIB_METHOD_SYNC(modifyDefaultTarget,GreaseLibTargetOpts *opts);
 
 #define GREASE_LIB_SINK_UNIXDGRAM 0x1
