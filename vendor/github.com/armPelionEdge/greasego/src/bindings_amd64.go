@@ -356,6 +356,8 @@ func findTypeByTag(tag string, in interface{}) reflect.Type {
 // return value = 0 means the target name doesn't exist
 // return value > 0 is the ID of the target
 func GetTargetId(name string) uint32 {
+	fmt.Println("costa: amd64: GetTargetId: ", name)
+	fmt.Println("costa: amd64: TargetMap: ", TargetMap)
 	return TargetMap[name]
 }
 
@@ -540,6 +542,93 @@ func AssignFromStruct(opts interface{}, obj interface{}) { //, typ reflect.Type)
 
 	}
 	DEBUG(fmt.Println("exit assign"))
+}
+
+func convertCGreaseLibToOpts(opts *GreaseLibTargetOpts) {
+
+	if opts._binding.delim != nil {
+		s := C.GoStringN(opts._binding.delim, opts._binding.len_delim)
+		opts.Delim = &s
+	}
+
+	if opts._binding.tty != nil {
+		s := C.GoString(opts._binding.tty)
+		opts.TTY = &s
+	}
+
+	if opts._binding.file != nil {
+		s := C.GoString(opts._binding.file)
+		opts.File = &s
+	}
+
+	if opts._binding.format_pre != nil {
+		s := C.GoStringN(opts._binding.format_pre, opts._binding.format_pre_len)
+		opts.Format_pre = &s
+	}
+
+	if opts._binding.format_time != nil {
+		s := C.GoStringN(opts._binding.format_time, opts._binding.format_time_len)
+		opts.Format_time = &s
+	}
+
+	if opts._binding.format_level != nil {
+		s := C.GoStringN(opts._binding.format_level, opts._binding.format_level_len)
+		opts.Format_level = &s
+	}
+
+	if opts._binding.format_tag != nil {
+		s := C.GoStringN(opts._binding.format_tag, opts._binding.format_tag_len)
+		opts.Format_tag = &s
+	}
+
+	if opts._binding.format_origin != nil {
+		s := C.GoStringN(opts._binding.format_origin, opts._binding.format_origin_len)
+		opts.Format_origin = &s
+	}
+
+	if opts._binding.format_post != nil {
+		s := C.GoStringN(opts._binding.format_post, opts._binding.format_post_len)
+		opts.Format_post = &s
+	}
+
+	if opts._binding.format_pre_msg != nil {
+		s := C.GoStringN(opts._binding.format_pre_msg, opts._binding.format_pre_msg_len)
+		opts.Format_pre_msg = &s
+	}
+
+	opts.NumBanks = uint32(opts._binding.num_banks)
+
+	/*
+		HERE
+		if opts.FileOpts != nil {
+			opts._binding.fileOpts = C.GreaseLib_new_GreaseLibTargetFileOpts()
+			if opts.FileOpts.Max_file_size > 0 {
+				opts._binding.fileOpts.max_file_size = C.uint32_t(opts.FileOpts.Max_file_size)
+				C.GreaseLib_set_flag_GreaseLibTargetFileOpts(opts._binding.fileOpts, C.GREASE_LIB_SET_FILEOPTS_ROTATE)
+				C.GreaseLib_set_flag_GreaseLibTargetFileOpts(opts._binding.fileOpts, C.GREASE_LIB_SET_FILEOPTS_MAXFILESIZE)
+			}
+			if opts.FileOpts.Max_files > 0 {
+				opts._binding.fileOpts.max_files = C.uint32_t(opts.FileOpts.Max_files)
+				C.GreaseLib_set_flag_GreaseLibTargetFileOpts(opts._binding.fileOpts, C.GREASE_LIB_SET_FILEOPTS_ROTATE)
+				C.GreaseLib_set_flag_GreaseLibTargetFileOpts(opts._binding.fileOpts, C.GREASE_LIB_SET_FILEOPTS_MAXFILES)
+			}
+			if opts.FileOpts.Max_total_size > 0 {
+				opts._binding.fileOpts.max_total_size = C.uint64_t(opts.FileOpts.Max_total_size)
+				C.GreaseLib_set_flag_GreaseLibTargetFileOpts(opts._binding.fileOpts, C.GREASE_LIB_SET_FILEOPTS_MAXTOTALSIZE)
+			}
+			if opts.FileOpts.Rotate_on_start {
+				C.GreaseLib_set_flag_GreaseLibTargetFileOpts(opts._binding.fileOpts, C.GREASE_LIB_SET_FILEOPTS_ROTATEONSTART)
+			}
+			if opts.FileOpts.Flags > 0 {
+				opts._binding.fileOpts.flags = C.uint32_t(opts.FileOpts.Flags)
+			}
+			if opts.FileOpts.Mode > 0 {
+				opts._binding.fileOpts.mode = C.uint32_t(opts.FileOpts.Mode)
+			}
+		}
+	*/
+
+	opts.flags = uint32(opts._binding.flags)
 }
 
 func convertOptsToCGreaseLib(opts *GreaseLibTargetOpts) {
@@ -747,6 +836,20 @@ func AddTarget(opts *GreaseLibTargetOpts, cb GreaseLibAddTargetCB) {
 	addTargetCallbackMap[optid] = dat
 	addTargetCallbackMapMutex.Unlock()
 	C.greasego_wrapper_addTarget(&(opts._binding)) // use the wrapper func
+}
+
+func GetAllTargets() []GreaseLibTargetOpts {
+	var targets []GreaseLibTargetOpts
+
+	//costa: TODO: need to associate Filters
+
+	for name, id := range TargetMap {
+		opts := NewGreaseLibTargetOpts()
+		C.GreaseLib_get_GreaseLibTargetOpts(&opts._binding, C.uint32_t(id))
+		fmt.Println("costa: target=", name, ", id=", id, "data=", *opts)
+		targets = append(targets, *opts)
+	}
+	return targets
 }
 
 func ModifyDefaultTarget(opts *GreaseLibTargetOpts) int {

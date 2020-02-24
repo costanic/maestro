@@ -128,6 +128,7 @@ func handleAlive(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 }
 
 func processPutLogFilter(filterConfig maestroSpecs.LogFilter) error {
+	fmt.Println("costa: processPutLogFilter: ", filterConfig)
 	targId := greasego.GetTargetId(filterConfig.Target)
 	if targId == 0 {
 		return errors.New("target does not exist")
@@ -173,7 +174,10 @@ func handlePutLogTarget(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 		return
 	}
 
+	fmt.Println("costa: handlePutLogTarget: decoded configs: ", targetConfigs)
+
 	for _, target := range targetConfigs {
+		fmt.Println("costa: handlePutLogTarget: target: ", target)
 		if len(target.Name) == 0 {
 			if len(target.File) > 0 {
 				target.Name = target.File
@@ -184,6 +188,7 @@ func handlePutLogTarget(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 			}
 		}
 		for _, filter := range target.Filters {
+			fmt.Println("costa: handlePutLogTarget: filter: ", filter)
 			if len(filter.Target) == 0 {
 				filter.Target = target.Name
 			}
@@ -208,6 +213,11 @@ func handlePutLogTarget(w http.ResponseWriter, r *http.Request, _ httprouter.Par
 func handleGetLogTarget(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	targetConfigs := make([]maestroSpecs.LogTarget, 0)
+
+	targets := greasego.GetAllTargets()
+	for _, target := range targets {
+		fmt.Println("target: ", target)
+	}
 
 	body, err := json.Marshal(targetConfigs)
 	if err != nil {

@@ -693,7 +693,6 @@ void GreaseLib_set_flag_GreaseLibTargetFileOpts(GreaseLibTargetFileOpts *opts,ui
 	opts->_enabledFlags |= flag;
 }
 
-
 GreaseLibTargetOpts *GreaseLib_new_GreaseLibTargetOpts(void) {
 	GreaseLibTargetOpts *ret = (GreaseLibTargetOpts *) ::malloc(sizeof(GreaseLibTargetOpts));
 	GreaseLogger *l = GreaseLogger::setupClass();
@@ -713,8 +712,6 @@ GreaseLibTargetOpts *GreaseLib_init_GreaseLibTargetOpts(GreaseLibTargetOpts *ret
 	return ret;
 }
 
-
-
 void GreaseLib_cleanup_GreaseLibTargetOpts(GreaseLibTargetOpts *opts) {
 	if(opts) ::free(opts);
 }
@@ -727,6 +724,38 @@ void GreaseLib_set_flag_GreaseLibTargetOpts(GreaseLibTargetOpts *opts,uint32_t f
 	opts->flags |= flag;
 }
 
+uint32_t GreaseLib_get_flags_GreaseLibTargetOpts(GreaseLibTargetOpts *opts) {
+    return opts->flags;
+}
+
+GreaseLibTargetOpts *GreaseLib_get_GreaseLibTargetOpts(GreaseLibTargetOpts *ret, uint32_t target_id) {
+	GreaseLogger *l = GreaseLogger::setupClass();
+
+	GreaseLogger::logTarget *t = NULL;
+	if (!l->targets.find(id, t)) {
+		return NULL;
+	}
+
+	// clear the return struct
+	::memset(ret, 0, sizeof(*ret));
+
+	GreaseLogger::fileTarget *filetarget = dynamic_cast<GreaseLogger::fileTarget *>(t);
+	if (filetarget != NULL) {
+		ret->file = local_strdup_safe(filetarget->myPath);
+	}
+
+	GreaseLogger::ttyTarget *ttytarget = dynamic_cast<GreaseLogger::ttyTarget *>(t);
+	if (ttytarget != NULL) {
+		ret->tty = local_strdup_safe(ttytarget->ttyPath);
+	}
+
+	GreaseLogger::callbackTarget *callbacktarget = dynamic_cast<GreaseLogger::callbackTarget *>(t);
+	if (callback != NULL) {
+        ret->name = "callbacktarget"
+	}
+
+	return ret;
+}
 
 LIB_METHOD_SYNC(modifyDefaultTarget,GreaseLibTargetOpts *opts) {
 	GreaseLogger *l = GreaseLogger::setupClass();
@@ -835,6 +864,7 @@ LIB_METHOD_SYNC(modifyDefaultTarget,GreaseLibTargetOpts *opts) {
 // implements the actionCB call
 void addTarget_actionCB(GreaseLogger *, _errcmn::err_ev &err, void *data) {
 	GreaseLogger::target_start_info *info = (GreaseLogger::target_start_info *)	data;
+    printf("costa: ==> grease_lib.cc::addTarget_actionCB");
 	if(info && info->targetStartCB) {
 		if(err.hasErr()) {
 			// pass error - convert to C style error:
@@ -849,12 +879,15 @@ void addTarget_actionCB(GreaseLogger *, _errcmn::err_ev &err, void *data) {
 			info->targetStartCB(NULL,&outinfo);
 		}
 	}
+    printf("costa: <== grease_lib.cc::addTarget_actionCB");
 }
-
 
 LIB_METHOD(addTarget,GreaseLibTargetOpts *opts) {
 	GreaseLogger *l = GreaseLogger::setupClass();
 	GreaseLogger::target_start_info *i = new GreaseLogger::target_start_info();
+
+    printf("costa: ==> grease_lib.cc::addTarget");
+
 	i->cb = addTarget_actionCB;
 //	if(opts->)
 	i->targetStartCB = libCB; // this will be called when target starts
@@ -973,6 +1006,7 @@ LIB_METHOD(addTarget,GreaseLibTargetOpts *opts) {
 		targ->setTimeFormat(opts->format_time,opts->format_time_len);
 	}
 
+    printf("costa: <== grease_lib.cc::addTarget");
 	return GREASE_LIB_OK;
 
 }

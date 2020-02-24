@@ -450,6 +450,23 @@ describe('Maestro API', function() {
             this.done = done;
             maestro_api_set_log_target(this, ['warn']);
         });
+
+        it('should retrieve the current log target configs', function(done) {
+            this.timeout(timeout);
+            this.done = done;
+            let command = Commands.list.maestro_shell_get;
+            command = command.replace('{{url}}', '/log/target');
+            maestro_commands.run_shell(command, function(data) {
+                let active_config = JSON.parse(data);
+
+                // Loop through all the targets and verify they match the active maestro.config
+                for (var target in active_config) {
+                    console.log(target.Name)
+                }
+
+                this.done();
+            }.bind(this));
+        });
     });
 });
 

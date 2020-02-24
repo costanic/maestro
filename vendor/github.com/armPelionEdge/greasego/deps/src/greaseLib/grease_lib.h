@@ -14,7 +14,7 @@
     Copyright (c) 2019, Arm Limited and affiliates.
 
     SPDX-License-Identifier: MIT
-    
+
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
     in the Software without restriction, including without limitation the rights
@@ -133,6 +133,7 @@ typedef struct {
 } GreaseLibTargetFileOpts;
 
 typedef struct {
+	TargetId targetId;
 	char *delim;             // points to delimetter UTF8, does not need NULL termination, NULL pointer will use default value
 	int len_delim;           // length of above buffer
 //	char *delim_output;
@@ -161,9 +162,9 @@ typedef struct {
 } GreaseLibTargetOpts;
 
 typedef struct {
-	int optsId;
+    GreaseLibTargetOpts opts;
 	TargetId targId;
-} GreaseLibStartedTargetInfo;
+} GreaseLibTarget;
 
 // tell the target to JSON escape all strings handed to it
 #define GREASE_JSON_ESCAPE_STRINGS 0x00000001
@@ -175,14 +176,13 @@ GreaseLibTargetFileOpts *GreaseLib_new_GreaseLibTargetFileOpts();
 GreaseLibTargetFileOpts *GreaseLib_init_GreaseLibTargetFileOpts(GreaseLibTargetFileOpts *);
 void GreaseLib_cleanup_GreaseLibTargetFileOpts(GreaseLibTargetFileOpts *opts);
 void GreaseLib_set_flag_GreaseLibTargetFileOpts(GreaseLibTargetFileOpts *opts,uint32_t flag);
-
+void GreaseLib_set_string_GreaseLibTargetFileOpts(GreaseLibTargetFileOpts *opts,uint32_t flag,const char *s);
 
 GreaseLibTargetOpts *GreaseLib_new_GreaseLibTargetOpts();
 GreaseLibTargetOpts *GreaseLib_init_GreaseLibTargetOpts(GreaseLibTargetOpts *);
 void GreaseLib_set_flag_GreaseLibTargetOpts(GreaseLibTargetOpts *opts,uint32_t flag);
-
+GreaseLibTargetOpts *GreaseLib_get_GreaseLibTargetOpts(GreaseLibTargetOpts *ret, uint32_t target_id);
 void GreaseLib_cleanup_GreaseLibTargetOpts(GreaseLibTargetOpts *opts);
-void GreaseLib_set_string_GreaseLibTargetFileOpts(GreaseLibTargetFileOpts *opts,uint32_t flag,const char *s);
 
 LIB_METHOD_SYNC(modifyDefaultTarget,GreaseLibTargetOpts *opts);
 LIB_METHOD(addTarget,GreaseLibTargetOpts *opts);

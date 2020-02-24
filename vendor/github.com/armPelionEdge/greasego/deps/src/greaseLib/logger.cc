@@ -564,6 +564,7 @@ void GreaseLogger::flushAll(bool nocallbacks) { // flushes buffers. Synchronous
 		iter.getNext();
 	}
 }
+
 void GreaseLogger::flushAllSync(bool rotate, bool nocallbacks) { // flushes buffers. Synchronous
 	if(LOGGER->defaultTarget) {
 		LOGGER->defaultTarget->flushAllSync();
@@ -1484,6 +1485,8 @@ NAN_METHOD(GreaseLogger::AddTarget) {
 	GreaseLogger *l = GreaseLogger::setupClass();
 	uint32_t target = DEFAULT_TARGET;
 
+    printf("costa: ==> logger.cc::AddTarget");
+
 //	iterate_plhdr();
 
 	if(info.Length() > 1 && info[0]->IsObject()){
@@ -1666,6 +1669,7 @@ NAN_METHOD(GreaseLogger::AddTarget) {
 	} else {
 		Nan::ThrowTypeError("Malformed call to addTarget()");
 	}
+    printf("costa: <== logger.cc::AddTarget");
 }
 
 

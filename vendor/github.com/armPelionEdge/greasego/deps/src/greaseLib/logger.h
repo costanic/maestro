@@ -11,7 +11,7 @@
     Copyright (c) 2019, Arm Limited and affiliates.
 
     SPDX-License-Identifier: MIT
-    
+
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
     in the Software without restriction, including without limitation the rights
@@ -238,9 +238,9 @@ struct uint64_t_eqstrP {
 const int MAX_IF_NAME_LEN = 16;
 
 
-class GreaseLogger 
+class GreaseLogger
 #ifndef GREASE_LIB
-	: public Nan::ObjectWrap 
+	: public Nan::ObjectWrap
 #endif
 {
 public:
@@ -849,12 +849,12 @@ protected:
 	protected:
 #ifndef GREASE_LIB
 		Persistent<Function> onNewConnCB;
-#endif		
+#endif
 	public:
 
-		Sink() 
+		Sink()
 #ifndef GREASE_LIB
-		: onNewConnCB() 
+		: onNewConnCB()
 #endif
 		{}
 
@@ -1305,10 +1305,10 @@ protected:
 #endif
 
 								int r = recv_cnt;
-								if(l->_grabInLogBuffer(entry) == GREASE_OK) {									
+								if(l->_grabInLogBuffer(entry) == GREASE_OK) {
 									if(GreaseLogger::parse_single_syslog_to_singleLog((char *) iov[iov_n].iov_base, r, state, entry)) {
 										entry->incRef();
-										l->_submitBuffer(entry);										
+										l->_submitBuffer(entry);
 									} else {
 										if(state == SYSLOG_INVALID) {
 											DBG_OUT("Invalid syslog state! (iovec recvmsg() call)");
@@ -2571,21 +2571,21 @@ protected:
 //			work.data = this;
 		}
 		nodeCmdReq(nodeCmdReq &) = delete;
-		nodeCmdReq() : cmd(nodeCommand::NOOP), _errno(0), 
+		nodeCmdReq() : cmd(nodeCommand::NOOP), _errno(0),
 #ifndef GREASE_LIB
-		callback(), 
-#endif		
+		callback(),
+#endif
 		self(NULL) {}
-		nodeCmdReq(nodeCmdReq &&o) :cmd(o.cmd), _errno(o._errno), 
+		nodeCmdReq(nodeCmdReq &&o) :cmd(o.cmd), _errno(o._errno),
 #ifndef GREASE_LIB
-		callback(NULL), 
-#endif		
+		callback(NULL),
+#endif
 		self(o.self) {
 #ifndef GREASE_LIB
 			if(o.callback) {
 				callback = o.callback; o.callback = NULL;
 			}
-#endif			
+#endif
 		};
 		nodeCmdReq& operator=(nodeCmdReq&& o) {
 			cmd = o.cmd;
@@ -2594,7 +2594,7 @@ protected:
 			if(o.callback) {
 				callback = o.callback; o.callback = NULL;
 			}
-#endif			
+#endif
 			return *this;
 		}
 	};
@@ -3749,7 +3749,7 @@ protected:
 				HEAVY_DBG_OUT("rotation: current file %s is %d bytes\n",myPath,req.statbuf.st_size);
 				if(filerotation.max_file_size && filerotation.max_file_size < req.statbuf.st_size) {
 					needs_rotation = true;
-					HEAVY_DBG_OUT("rotation: current files needs rotation.\n");					
+					HEAVY_DBG_OUT("rotation: current files needs rotation.\n");
 				}
 
 				all_files_size += req.statbuf.st_size;
@@ -3818,7 +3818,7 @@ protected:
 					if(needs_rotate || filerotation.rotate_on_start) {
 						HEAVY_DBG_OUT("Needs rotate....\n");
 						if (filerotation.rotate_on_start) {
-							// ok - need to preload the list of existing log files.							
+							// ok - need to preload the list of existing log files.
 						}
 						rotate_files();
 					}
@@ -3954,6 +3954,9 @@ protected:
 		uv_mutex_unlock(&modifyTargets);
 		return ret;
 	}
+
+    GreaseLibTargetOpts *getAllTargetOpts() {
+    }
 
 	logTarget *defaultTarget;
 	Filter defaultFilter;
@@ -4256,6 +4259,7 @@ protected:
 	friend void ::_greaseLib_handle_stderrFd_cb(uv_poll_t *handle, int status, int events);
 	friend GreaseLibTargetOpts* ::GreaseLib_new_GreaseLibTargetOpts(void);
 	friend GreaseLibTargetOpts* ::GreaseLib_init_GreaseLibTargetOpts(GreaseLibTargetOpts *);
+	friend GreaseLibTargetOpts* ::GreaseLib_get_GreaseLibTargetOpts(GreaseLibTargetOpts *, uint32_t target_id);
 	friend void ::GreaseLib_cleanup_GreaseLibBuf(GreaseLibBuf *b);
 #endif
 
