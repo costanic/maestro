@@ -639,7 +639,7 @@ void GreaseLogger::targetReady(bool ready, _errcmn::err_ev &err, logTarget *t) {
 		}
 		ERROR_OUT("Failed to create target: %d\n", t->myId);
 		if(info && info->cb) {
-			info->targId = NULL;
+			info->targId = 0;
 			info->cb(t->owner,err,info);
 		}
 		// TODO shutdown?
