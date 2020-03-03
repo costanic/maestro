@@ -103,10 +103,15 @@ bool GreaseLogger::sift(logMeta &f) { // returns true, then the logger should lo
 	mask = Opts.levelFilterOutMask;
 	uv_mutex_unlock(&modifyFilters);
 
-	if(mask & f.level)
+    HEAVY_DBG_OUT("costa: ==> GreaseLogger::sift");
+
+	if(mask & f.level) {
+		HEAVY_DBG_OUT("costa: <== GreaseLogger::sift: masked out");
 		return false;
+	}
 
 	if(!META_HAS_CACHE(f)) {  // if the hashes aren't cached, then we have not done this...
+		HEAVY_DBG_OUT("costa:     GreaseLogger::sift: create cache");
 		getHashes(f.tag,f.origin,f._cached_hash);
 
 		uv_mutex_lock(&modifyFilters);
@@ -114,25 +119,32 @@ bool GreaseLogger::sift(logMeta &f) { // returns true, then the logger should lo
 		if(filterHashTable.find(f._cached_hash[0],list)) { // check both tag and orgin
 			ret = true;
 			META_SET_LIST(f,0,list);
+			HEAVY_DBG_OUT("costa:     GreaseLogger::sift: both tag and origin");
 		}
 		if(!ret && filterHashTable.find(f._cached_hash[1],list)) { // check just tag
 			ret = true;
 			META_SET_LIST(f,1,list);
+			HEAVY_DBG_OUT("costa:     GreaseLogger::sift: just tag");
 		}
 		if(!ret && filterHashTable.find(f._cached_hash[2],list)) { // check just origin...
 			ret = true;
 			META_SET_LIST(f,2,list);
+			HEAVY_DBG_OUT("costa:     GreaseLogger::sift: just origin");
 		}
 
 		if(!ret && filterHashTable.find(zero,list)) {
 			ret = true;
 			META_SET_LIST(f,3,list);
+			HEAVY_DBG_OUT("costa:     GreaseLogger::sift: zero");
 		}
 
-		if(!ret && Opts.defaultFilterOut)        // if neither, then do we output by default?
+		if(!ret && Opts.defaultFilterOut) {        // if neither, then do we output by default?
 			ret = false;
-		else
+			HEAVY_DBG_OUT("costa:     GreaseLogger::sift: fallback to defaultFilterOut=true, ret=false");
+		} else {
 			ret = true;
+			HEAVY_DBG_OUT("costa:     GreaseLogger::sift: fallback to defaultFilterOut=false, ret=true");
+		}
 
 //		if(ret && META_HAS_IGNORES(f)) {
 //			TargetId ignore_list = META_IGNORE_LIST(f);
@@ -146,8 +158,11 @@ bool GreaseLogger::sift(logMeta &f) { // returns true, then the logger should lo
 //		}
 
 		uv_mutex_unlock(&modifyFilters);
-	} else
+	} else {
+		HEAVY_DBG_OUT("costa:     GreaseLogger::sift: cache exists, ret=true");
 		ret = true;
+	}
+	HEAVY_DBG_OUT("costa: <=- GreaseLogger::sift: ret=%d", ret);
 	return ret;
 }
 
@@ -224,6 +239,7 @@ void GreaseLogger::handleInternalCmd(uv_async_t *handle, int status /*UNUSED*/) 
     	case NEW_LOG:
     		{
     			// process a single log message
+				HEAVY_DBG_OUT("costa: NEW_LOG");
     			singleLog *l = (singleLog *) req.aux;
     			assert(l);
 //    			FilterList *list = NULL;
@@ -237,6 +253,7 @@ void GreaseLogger::handleInternalCmd(uv_async_t *handle, int status /*UNUSED*/) 
     							logTarget *t = NULL;
     							ignore = false;
     							if(((LIST->list[n].levelMask & l->meta.m.level) > 0) && !LIST->list[n]._disabled) { //if we have a Filter that matches...
+                                    HEAVY_DBG_OUT("costa: found matching filter: id=%d", LIST->list[n].id);
     								if(META_HAS_IGNORES(l->meta.m)) {
     									int x = 0;
     									while(x < MAX_IGNORE_LIST) {
@@ -270,6 +287,7 @@ void GreaseLogger::handleInternalCmd(uv_async_t *handle, int status /*UNUSED*/) 
     					}
     				}
     				if(!wrote && GreaseLogger::LOGGER->defaultTarget) {
+                        HEAVY_DBG_OUT("costa: fallthrough to defaultTarget");
         				GreaseLogger::LOGGER->defaultTarget->write(l->buf.handle.base,l->buf.used,l->meta.m,&GreaseLogger::LOGGER->defaultFilter);
         			}
 //        			}
@@ -284,6 +302,7 @@ void GreaseLogger::handleInternalCmd(uv_async_t *handle, int status /*UNUSED*/) 
     		break;
     	case TARGET_ROTATE_BUFFER:
 		    {
+				HEAVY_DBG_OUT("costa: TARGET_ROTATE_BUFFER");
 		    	if(req.d > 0)
 		    		t = GreaseLogger::LOGGER->getTarget(req.d);
 		    	else
@@ -301,6 +320,7 @@ void GreaseLogger::handleInternalCmd(uv_async_t *handle, int status /*UNUSED*/) 
 		case WRITE_TARGET_OVERFLOW:
 
 			{
+				HEAVY_DBG_OUT("costa: WRITE_TARGET_OVERFLOW");
 				// process a single log message - this is a large overflow message which is not in the masterBuffer
 				singleLog *l = (singleLog *) req.aux;
 				assert(l);
@@ -385,6 +405,7 @@ void GreaseLogger::handleInternalCmd(uv_async_t *handle, int status /*UNUSED*/) 
 			break;
     	case INTERNAL_SHUTDOWN:
     	{
+			HEAVY_DBG_OUT("costa: INTERNAL_SHUTDOWN");
     		DBG_OUT("Got INTERNAL_SHUTDOWN");
     		// disable timer
     		uv_timer_stop(&LOGGER->flushTimer);
@@ -459,23 +480,35 @@ void GreaseLogger::mainThread(void *p) {
 }
 
 int GreaseLogger::log(const logMeta &f, const char *s, int len) { // does the work of logging
-	if(len > GREASE_MAX_MESSAGE_SIZE)
+	HEAVY_DBG_OUT("costa: ==> GreaseLogger::log");
+	if(len > GREASE_MAX_MESSAGE_SIZE) {
+		HEAVY_DBG_OUT("costa: <== GreaseLogger::log: OVERFLOW");
 		return GREASE_OVERFLOW;
+	}
 	logMeta m = f;
 	if(sift(m)) {
+		HEAVY_DBG_OUT("costa: <== GreaseLogger::log: sift=true, calling _log");
 		return _log(m,s,len);
-	} else
+	} else {
+		HEAVY_DBG_OUT("costa: <== GreaseLogger::log: sift=false");
 		return GREASE_OK;
+	}
 }
 
 int GreaseLogger::logP(logMeta *f, const char *s, int len) { // does the work of logging
 
-	if(len > GREASE_MAX_MESSAGE_SIZE)
+	HEAVY_DBG_OUT("costa: ==> GreaseLogger::logP: msg=%s", s);
+	if(len > GREASE_MAX_MESSAGE_SIZE) {
+	    HEAVY_DBG_OUT("costa: <== GreaseLogger::logP: overflow");
 		return GREASE_OVERFLOW;
+    }
 	if(sift(*f)) {
+	    HEAVY_DBG_OUT("costa: <== GreaseLogger::logP: sift=true, calling _log");
 		return _log((*f),s,len);
-	} else
+	} else {
+	    HEAVY_DBG_OUT("costa: <== GreaseLogger::logP: sift=false");
 		return GREASE_OK;
+    }
 }
 
 
@@ -518,6 +551,7 @@ int GreaseLogger::logP(logMeta *f, const char *s, int len) { // does the work of
 int GreaseLogger::logFromRaw(char *base, int len) {
 	logMeta m;
 	RawLogLen l;
+    HEAVY_DBG_OUT("costa: ==> logFromRaw");
 	if(len >= GREASE_RAWBUF_MIN_SIZE) {
 
 //		memcpy(&l,base+SIZEOF_SINK_LOG_PREAMBLE,sizeof(RawLogLen));
@@ -526,23 +560,31 @@ int GreaseLogger::logFromRaw(char *base, int len) {
 //		memcpy(&m,base+GREASE_CLIENT_HEADER_SIZE,sizeof(logMeta));
 		int l = len - sizeof(logMeta);
 		if( l > 0) {
+            HEAVY_DBG_OUT("costa: <== logFromRaw: calling logP");
 			return logP((logMeta *)base,base+sizeof(logMeta),l);
 		} else {
+            HEAVY_DBG_OUT("costa: <== logFromRaw: message too small");
 			ERROR_OUT("logRaw() malformed data. message too small.\n");
 			return GREASE_OK;
 		}
-	} else
+	} else {
+        HEAVY_DBG_OUT("costa: <== logFromRaw: no buffer");
 		return GREASE_NO_BUFFER;
+    }
 }
 
 
 int GreaseLogger::logSync(const logMeta &f, const char *s, int len) { // does the work of logging. now. will empty any buffers first.
 	FilterList *list = NULL;
 	logMeta m = f;
+	HEAVY_DBG_OUT("costa: ==> logSync");
 	if(sift(m)) {
+		HEAVY_DBG_OUT("costa: <== logSync: sift=true, calling _logSync");
 		return _logSync(f,s,len);
-	} else
+	} else {
+		HEAVY_DBG_OUT("costa: <== logSync: sift=false");
 		return GREASE_OK;
+	}
 }
 void GreaseLogger::flushAll(bool nocallbacks) { // flushes buffers. Synchronous
 	static bool suppressTargetMsg = false;
@@ -1954,14 +1996,18 @@ bool GreaseLogger::parse_single_syslog_to_singleLog(char *start, int &remain, sy
 // EXAMPLE LOG INPUT:<30>Feb  1 15:40:05 nm-dispatcher: req:2 'up' [wlan1]: s
 //                   <30>Jan 31 15:40:05 nm-dispatcher: req:2 'up' [wlan1]: s
 
+    HEAVY_DBG_OUT("costa: ==> parse_single_syslog_to_singleLog: META_HAS_CACHE=%d",
+            META_HAS_CACHE(entry->meta.m));
     while(remain > 0 && state != SYSLOG_INVALID && state != SYSLOG_END_LOG) {
         switch(state) {
             case SYSLOG_BEGIN:
+                HEAVY_DBG_OUT("costa:     parse_single_syslog_to_singleLog: SYSLOG_BEGIN");
                 if (*look == '<') {
                     state = SYSLOG_IN_FAC;                    
                 }
                 break;
             case SYSLOG_IN_FAC:
+                HEAVY_DBG_OUT("costa:     parse_single_syslog_to_singleLog: SYSLOG_IN_FAC");
                 if(log_fac_buf_n > 4) {
                     state = SYSLOG_INVALID;
                     break;
@@ -1997,6 +2043,7 @@ bool GreaseLogger::parse_single_syslog_to_singleLog(char *start, int &remain, sy
                 }
                 break;
             case SYSLOG_IN_DATE_MO:
+                HEAVY_DBG_OUT("costa:     parse_single_syslog_to_singleLog: SYSLOG_IN_DATE_MO");
                 // let's cheat. We don't care about the date. So skip past it
                 // the date-time stamp is 16 char, including last space
                 if (remain > 16) {
@@ -2012,6 +2059,7 @@ bool GreaseLogger::parse_single_syslog_to_singleLog(char *start, int &remain, sy
             case SYSLOG_IN_DATE_TIME:
                 
             case SYSLOG_IN_MESSAGE:
+                HEAVY_DBG_OUT("costa:     parse_single_syslog_to_singleLog: SYSLOG_IN_{DAY,TIME,MESSAGE}");
                 msg_mark = look;
 //                moved = look;
                 // assume this is only one log message
@@ -2023,6 +2071,7 @@ bool GreaseLogger::parse_single_syslog_to_singleLog(char *start, int &remain, sy
 //        moved = look;
     }
     if(state == SYSLOG_END_LOG) {
+        HEAVY_DBG_OUT("costa:     parse_single_syslog_to_singleLog: SYSLOG_END_LOG");
         begin_state = SYSLOG_BEGIN; // on the next call, move to next log entry
         entry->meta.m.origin = 0;
         if(remain > 0) {
@@ -2037,12 +2086,15 @@ bool GreaseLogger::parse_single_syslog_to_singleLog(char *start, int &remain, sy
                 entry->buf.used = (int)remain;
             }
         } else {
+            HEAVY_DBG_OUT("costa: <== parse_single_syslog_to_singleLog: SYSLOG_END_LOG && !remain>0");
             return false;
         }
         // we only return true if this loggable
+        HEAVY_DBG_OUT("costa: <== parse_single_syslog_to_singleLog: SYSLOG_END_LOG");
         return true;
     } else {
         begin_state = state;
+        HEAVY_DBG_OUT("costa: <== parse_single_syslog_to_singleLog: !SYSLOG_END_LOG");
         return false;
     }
 }
@@ -2161,7 +2213,9 @@ bool GreaseLogger::parse_single_devklog_to_singleLog(char *start, int &remain, k
 }
 
 int GreaseLogger::_grabInLogBuffer(singleLog* &buf) {
+	HEAVY_DBG_OUT("costa: ==> _grabInLogBuffer");
 	if(masterBufferAvail.remove(buf)){
+		HEAVY_DBG_OUT("costa: <== _grabInLogBuffer: META_HAS_CACHE=%d", META_HAS_CACHE(buf->meta.m));
 		return GREASE_OK;
 	} else {
 		return GREASE_OVERFLOW;
@@ -2175,21 +2229,25 @@ int GreaseLogger::_returnBuffer(singleLog *buf) {
 }
 
 int GreaseLogger::_submitBuffer(singleLog *buf) {
+	HEAVY_DBG_OUT("costa: GreaseLogger::_submitBuffer");
 	if(buf->buf.used < 1) {
 		// if for some reason the caller does not put anything in the buffer,
 		// then just return it
 		buf->clear();
 		masterBufferAvail.add(buf);
+		HEAVY_DBG_OUT("costa: <== GreaseLogger::_submitBuffer: buf.used < 1");
 		return GREASE_OK;
 	}
 	internalCmdReq req(NEW_LOG);
 	req.aux = buf;
-	if(internalCmdQueue.addMvIfRoom(req))
+	if(internalCmdQueue.addMvIfRoom(req)) {
 		uv_async_send(&asyncInternalCommand);
-	else {
+		HEAVY_DBG_OUT("costa: <== GreaseLogger::_submitBuffer: NEW_LOG queued");
+	} else {
 		buf->clear();
 		masterBufferAvail.add(buf);
 		ERROR_OUT("internalCmdQueue is out of space!! Dropping. (_submitBuffer) \n");
+		HEAVY_DBG_OUT("costa: <== GreaseLogger::_submitBuffer: NEW_LOG was full");
 	}
 }
 
@@ -2198,6 +2256,7 @@ int GreaseLogger::_log( const logMeta &meta, const char *s, int len) { // intern
 //	DBG_OUT("meta.level %x",meta.level);
 //	if(len > GREASE_MAX_MESSAGE_SIZE)
 //		return GREASE_OVERFLOW;
+	HEAVY_DBG_OUT("costa: ==> GreaseLogger::_log");
 	singleLog *l = NULL;
 	if(len > Opts.bufferSize) {
 		internalCmdReq req(WRITE_TARGET_OVERFLOW);
@@ -2220,11 +2279,14 @@ int GreaseLogger::_log( const logMeta &meta, const char *s, int len) { // intern
 		}
 	} else {
 		if(masterBufferAvail.remove(l)) {
+			HEAVY_DBG_OUT("costa: GreaseLogger::_log: alloc singleLog");
 			l->buf.memcpy(s,len);
 			if(META_HAS_IGNORES(meta)) {
+				HEAVY_DBG_OUT("costa:     GreaseLogger::_log: META_HAS_IGNORES");
 				extra_logMeta *extra = META_WITH_EXTRAS(meta);
 				memcpy(&l->meta, extra, sizeof(extra_logMeta));
 			} else {
+				HEAVY_DBG_OUT("costa:     GreaseLogger::_log: !META_HAS_IGNORES");
 				l->meta.m = meta;
 			}
 
@@ -2258,6 +2320,7 @@ int GreaseLogger::_log( const logMeta &meta, const char *s, int len) { // intern
 //	} else {  // write out to default target if the list does not apply to this level
 //		defaultTarget->write(s,len,meta);
 //	}
+	HEAVY_DBG_OUT("costa: <== GreaseLogger::_log");
 	return GREASE_OK;
 }
 

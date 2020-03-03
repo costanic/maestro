@@ -1037,6 +1037,7 @@ func SetInternalLogOrigin(originid uint32, name string) {
 func LogError(a ...interface{}) {
 	out := fmt.Sprint(a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogError")
 	C.GreaseLib_logCharBuffer(&C.go_self_meta_error, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1044,6 +1045,7 @@ func LogError(a ...interface{}) {
 func LogErrorf(format string, a ...interface{}) {
 	out := fmt.Sprintf(format, a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogErrorf")
 	C.GreaseLib_logCharBuffer(&C.go_self_meta_error, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1051,6 +1053,7 @@ func LogErrorf(format string, a ...interface{}) {
 func LogWarning(a ...interface{}) {
 	out := fmt.Sprint(a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogWarning")
 	C.GreaseLib_logCharBuffer(&C.go_self_meta_warning, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1058,6 +1061,7 @@ func LogWarning(a ...interface{}) {
 func LogWarningf(format string, a ...interface{}) {
 	out := fmt.Sprintf(format, a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogWarningf")
 	C.GreaseLib_logCharBuffer(&C.go_self_meta_warning, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1065,6 +1069,7 @@ func LogWarningf(format string, a ...interface{}) {
 func LogInfo(a ...interface{}) {
 	out := fmt.Sprint(a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogInfo")
 	C.GreaseLib_logCharBuffer(&C.go_self_meta_info, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1072,6 +1077,7 @@ func LogInfo(a ...interface{}) {
 func LogInfof(format string, a ...interface{}) {
 	out := fmt.Sprintf(format, a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogInfof")
 	C.GreaseLib_logCharBuffer(&C.go_self_meta_info, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1079,6 +1085,7 @@ func LogInfof(format string, a ...interface{}) {
 func LogDebug(a ...interface{}) {
 	out := fmt.Sprint(a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogDebug")
 	C.GreaseLib_logCharBuffer(&C.go_self_meta_debug, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1086,6 +1093,7 @@ func LogDebug(a ...interface{}) {
 func LogDebugf(format string, a ...interface{}) {
 	out := fmt.Sprintf(format, a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogDebugf")
 	C.GreaseLib_logCharBuffer(&C.go_self_meta_debug, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1093,6 +1101,7 @@ func LogDebugf(format string, a ...interface{}) {
 func LogSuccess(a ...interface{}) {
 	out := fmt.Sprint(a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogSuccess")
 	C.GreaseLib_logCharBuffer(&C.go_self_meta_success, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1100,6 +1109,7 @@ func LogSuccess(a ...interface{}) {
 func LogSuccessf(format string, a ...interface{}) {
 	out := fmt.Sprintf(format, a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogSuccessf")
 	C.GreaseLib_logCharBuffer(&C.go_self_meta_success, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1107,6 +1117,7 @@ func LogSuccessf(format string, a ...interface{}) {
 func LogError_noOrigin(a ...interface{}) {
 	out := fmt.Sprint(a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogError_noOrigin")
 	C.GreaseLib_logCharBuffer(&C.go_meta_error, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1114,6 +1125,7 @@ func LogError_noOrigin(a ...interface{}) {
 func LogErrorf_noOrigin(format string, a ...interface{}) {
 	out := fmt.Sprintf(format, a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogErrorf_noOrigin")
 	C.GreaseLib_logCharBuffer(&C.go_meta_error, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1121,6 +1133,7 @@ func LogErrorf_noOrigin(format string, a ...interface{}) {
 func LogWarning_noOrigin(a ...interface{}) {
 	out := fmt.Sprint(a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogWarning_noOrigin")
 	C.GreaseLib_logCharBuffer(&C.go_meta_warning, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1128,6 +1141,7 @@ func LogWarning_noOrigin(a ...interface{}) {
 func LogWarningf_noOrigin(format string, a ...interface{}) {
 	out := fmt.Sprintf(format, a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogWarningf_noOrigin")
 	C.GreaseLib_logCharBuffer(&C.go_meta_warning, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1135,6 +1149,7 @@ func LogWarningf_noOrigin(format string, a ...interface{}) {
 func LogInfo_noOrigin(a ...interface{}) {
 	out := fmt.Sprint(a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogInfo_noOrigin")
 	C.GreaseLib_logCharBuffer(&C.go_meta_info, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1142,6 +1157,7 @@ func LogInfo_noOrigin(a ...interface{}) {
 func LogInfof_noOrigin(format string, a ...interface{}) {
 	out := fmt.Sprintf(format, a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogInfof_noOrigin")
 	C.GreaseLib_logCharBuffer(&C.go_meta_info, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1149,6 +1165,7 @@ func LogInfof_noOrigin(format string, a ...interface{}) {
 func LogDebug_noOrigin(a ...interface{}) {
 	out := fmt.Sprint(a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogDebug_noOrigin")
 	C.GreaseLib_logCharBuffer(&C.go_meta_debug, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1156,6 +1173,7 @@ func LogDebug_noOrigin(a ...interface{}) {
 func LogDebugf_noOrigin(format string, a ...interface{}) {
 	out := fmt.Sprintf(format, a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogDebugf_noOrigin")
 	C.GreaseLib_logCharBuffer(&C.go_meta_debug, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1163,6 +1181,7 @@ func LogDebugf_noOrigin(format string, a ...interface{}) {
 func LogSuccess_noOrigin(a ...interface{}) {
 	out := fmt.Sprint(a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogSuccess_noOrigin")
 	C.GreaseLib_logCharBuffer(&C.go_meta_success, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }
@@ -1170,6 +1189,7 @@ func LogSuccess_noOrigin(a ...interface{}) {
 func LogSuccessf_noOrigin(format string, a ...interface{}) {
 	out := fmt.Sprintf(format, a...)
 	cstr := C.CString(out)
+	fmt.Println("costa: greasego.LogSuccessf_noOrigin")
 	C.GreaseLib_logCharBuffer(&C.go_meta_success, cstr, C.int(len(out)))
 	C.free(unsafe.Pointer(cstr))
 }

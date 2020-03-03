@@ -1321,10 +1321,12 @@ protected:
 #endif
 
 								int r = recv_cnt;
-								if(l->_grabInLogBuffer(entry) == GREASE_OK) {									
+								if(l->_grabInLogBuffer(entry) == GREASE_OK) {
+                                    HEAVY_DBG_OUT("costa: grabbed buffer: META_HAS_CACHE=%d", META_HAS_CACHE(entry->meta.m));
 									if(GreaseLogger::parse_single_syslog_to_singleLog((char *) iov[iov_n].iov_base, r, state, entry)) {
+                                        HEAVY_DBG_OUT("costa: submit syslog");
 										entry->incRef();
-										l->_submitBuffer(entry);										
+										l->_submitBuffer(entry);
 									} else {
 										if(state == SYSLOG_INVALID) {
 											DBG_OUT("Invalid syslog state! (iovec recvmsg() call)");
@@ -1533,6 +1535,7 @@ protected:
 
 									if(GreaseLogger::parse_single_klog_to_singleLog(buf_curpos, buf_remain, parse_state, entry, buf_curpos)) {
 										DBG_OUT("PARSED Klog: %s",buf_curpos);
+                                        HEAVY_DBG_OUT("costa: submit klog");
 										entry->incRef();
 										l->_submitBuffer(entry);
 									} else {
@@ -1782,6 +1785,7 @@ protected:
 								DBG_OUT("KLOG Got read %s",read_into);
 								if(GreaseLogger::parse_single_devklog_to_singleLog(read_into, readn, parse_state, entry, buf_curpos)) {
 									DBG_OUT("PARSED Klog: %s",buf_curpos);
+                                    HEAVY_DBG_OUT("costa: submit devklog");
 									entry->incRef();
 									l->_submitBuffer(entry);
 									read_into = temp_buffer_entry;
@@ -4007,9 +4011,11 @@ protected:
 	}
 
 	inline void getHashes(TagId tag, OriginId origin, FilterHash *hashes) {
+        HEAVY_DBG_OUT("costa: ==> getHashes");
 		hashes[0] = filterhash(tag,origin);
 		hashes[1] = hashes[0] & UINT64_C(0xFFFFFFFF00000000);
 		hashes[2] = hashes[0] & UINT64_C(0x00000000FFFFFFFF);
+        HEAVY_DBG_OUT("costa: <== getHashes");
 	}
 
 	void _findOrAddFilterTable(OriginId origin, TagId tag) {
@@ -4058,11 +4064,15 @@ protected:
 
 		hash = filterhash(tag,origin);
 
+		HEAVY_DBG_OUT("costa: _deleteFilter: id=%u, hash=%llu", id, hash);
+
 		uv_mutex_lock(&modifyFilters);
 		if (filterHashTable.find(hash, list)) {
+		    HEAVY_DBG_OUT("costa: _deleteFilter: found hash: id=%u", id);
 			Filter *filter = NULL;
 			list->find(id, filter);
 			if (filter) {
+		        HEAVY_DBG_OUT("costa: _deleteFilter: found filter: id=%u", id);
 				removed = true;
 				// remove the filter by replacing the filter list with a new list
 				// that doesn't contain the deleted filter.
@@ -4071,11 +4081,28 @@ protected:
 				for (int i = 0; i < MAX_IDENTICAL_FILTERS; ++i) {
 					if (list->list[i].id != 0 && list->list[i].id != id) {
 						replacement->add(list->list[i]);
-					}
+					} else {
+		                HEAVY_DBG_OUT("costa: _deleteFilter: leaving out filter id=%u from replacement list",
+                                 list->list[i].id);
+                    }
 				}
 				filterHashTable.addReplace(hash, replacement);
 			}
 		}
+
+		if (filterHashTable.find(hash, list)) {
+		    HEAVY_DBG_OUT("costa: _deleteFilter: after delete: found hash: id=%u", id);
+			Filter *filter = NULL;
+			list->find(id, filter);
+			if (filter) {
+		        HEAVY_DBG_OUT("costa: ERROR: _deleteFilter: after delete: found filter: id=%u", id);
+            } else {
+		        HEAVY_DBG_OUT("costa: SUCCESS: _deleteFilter: after delete: filter NOT found: id=%u", id);
+            }
+        } else {
+            HEAVY_DBG_OUT("costa: SUCCESS: _deleteFilter: after delete: hash not found: hash=%llu, id=%u", hash, id);
+        }
+
 		uv_mutex_unlock(&modifyFilters);
 
 		return removed;

@@ -321,6 +321,7 @@ void _greaseLib_handle_stderrFd_cb(uv_poll_t *handle, int status, int events) {
 
 LIB_METHOD_SYNC(logCharBuffer, logMeta *f, const char *utf8, int len) {
 	GreaseLogger *l = GreaseLogger::setupClass();
+    HEAVY_DBG_OUT("costa: <==> LIB::logCharBuffer");
 	return l->logP(f,utf8,len);
 }
 
@@ -1234,6 +1235,8 @@ LIB_METHOD_SYNC(enableFilter,GreaseLibFilter *filter) {
 LIB_METHOD_SYNC(deleteFilter,GreaseLibFilter *filter) {
 	GreaseLogger *l = GreaseLogger::setupClass();
 	GreaseLogger::Filter *found = NULL;
+
+    HEAVY_DBG_OUT("costa: deleteFilter");
 
 	if (l->_deleteFilter(filter->origin, filter->tag, filter->id)) {
 		return GREASE_LIB_OK;
