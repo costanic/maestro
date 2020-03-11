@@ -160,7 +160,7 @@ type logManagerInstance struct {
 	threadCountChan           chan logThreadMessage
 
 	// current config state
-	logConfig []maestroSpecs.LogTarget
+	logConfigPayload maestroSpecs.LogTargetPayload
 
 	// Configs to be used for connecting to devicedb
 	ddbConnConfig    *maestroConfig.DeviceDBConnConfig
@@ -249,19 +249,11 @@ func newLogManagerInstance() (ret *logManagerInstance) {
 func GetInstance() *logManagerInstance {
 	if instance == nil {
 		instance = newLogManagerInstance()
-		// provide a blank log config for now (until one is provided)
-		//instance.logConfig = new([]maestroSpecs.LogTarget)
 		storage.RegisterStorageUser(instance)
 		// internalTicker = time.NewTicker(time.Second * time.Duration(defaults.TASK_MANAGER_CLEAR_INTERVAL))
 		// controlChan = make(chan *controlToken, 100) // buffer up to 100 events
 	}
 	return instance
-}
-
-func (this *LogData) setRunningConfig(logconfig []maestroSpecs.LogTarget) (ret *LogData) {
-	//ret.RunningLogconfig = new(maestroSpecs.LogFilter)
-	ret.RunningLogconfig = logconfig // copy that entire struct
-	return
 }
 
 func validateLogConfig(logconf maestroSpecs.LogTarget) (ok bool, problem string) {
@@ -294,14 +286,23 @@ func resetLogDataFromStoredConfig(logtarget maestroSpecs.LogTarget) error {
 	return nil
 }
 
-func (this *logManagerInstance) submitConfigAndSync(config []maestroSpecs.LogTarget) {
-	this.submitConfig(config)
-	var ddbLogConfig maestroSpecs.LogConfigPayload
-
+func (config []maestroSpecs.LogTarget) newLogConfigPayload() maestroSpecs.LogTargetPayload {
+	var payload maestroSpecs.LogTargetPayload
 	for _, target := range config {
 		target := target
-		ddbLogConfig.Targets = append(ddbLogConfig.Targets, &target)
+		payload.Targets = append(payload.Targets, &target)
 	}
+	return payload
+}
+
+func (payload maestroSpecs.LogTargetPayload) newLogConfig() []maestroSpecs.LogTarget {
+
+}
+
+func (this *logManagerInstance) submitConfigAndSync(config []maestroSpecs.LogTarget) {
+	this.submitConfig(config)
+
+	ddbLogConfig := config.newLogConfigPayload()
 	log.MaestroWarnf("LogManager: Updating devicedb config.\n")
 	err := this.ddbConfigClient.Config(DDB_LOG_CONFIG_NAME).Put(&ddbLogConfig)
 	if err != nil {
@@ -310,7 +311,7 @@ func (this *logManagerInstance) submitConfigAndSync(config []maestroSpecs.LogTar
 }
 
 func (this *logManagerInstance) submitConfig(config []maestroSpecs.LogTarget) {
-	this.logConfig = config
+	//this.logConfig = config
 
 	debugging.DEBUG_OUT("targets:", len(config))
 	for n := 0; n < len(config); n++ {
@@ -475,10 +476,7 @@ func (this *logManagerInstance) SetupDeviceDBConfig() (err error) {
 			this.ddbConfigClient = maestroConfig.NewDDBRelayConfigClient(tlsConfig, this.ddbConnConfig.DeviceDBUri, this.ddbConnConfig.RelayId, this.ddbConnConfig.DeviceDBPrefix, this.ddbConnConfig.DeviceDBBucket)
 			err = this.ddbConfigClient.Config(DDB_LOG_CONFIG_NAME).Get(&ddbLogConfig)
 			if err != nil {
-				for _, target := range this.logConfig {
-					target := target
-					ddbLogConfig.Targets = append(ddbLogConfig.Targets, &target)
-				}
+				ddbLogConfig = this.logConfig.newLogConfigPayload()
 				log.MaestroWarnf("LogManager: No log config found in devicedb or unable to connect to devicedb err: %v. Let's put the current running config.\n", err)
 				err = this.ddbConfigClient.Config(DDB_LOG_CONFIG_NAME).Put(&ddbLogConfig)
 				if err != nil {
@@ -491,19 +489,12 @@ func (this *logManagerInstance) SetupDeviceDBConfig() (err error) {
 				log.MaestroInfof("LogManager: Found a valid config in devicedb [%v], will try to use and reconfigure log if its an updated one\n", ddbLogConfig.Targets)
 				log.MaestroInfof("MRAY DiffChanges being called\n")
 				fmt.Printf("MRAY DiffChanges being called\n")
-				var temp maestroSpecs.LogConfigPayload
-				for _, target := range this.logConfig {
-					target := target
-					temp.Targets = append(temp.Targets, &target)
-				}
+				temp := this.logConfig.newLogConfigPayload()
 				identical, _, _, err := configLogAna.DiffChanges(temp, ddbLogConfig)
 				if !identical && (err == nil) {
 					//The configs are different, lets go ahead reconfigure the intfs
 					log.MaestroDebugf("LogManager: New log config found from devicedb, reconfigure nework using new config\n")
-					this.logConfig = make([]maestroSpecs.LogTarget, len(ddbLogConfig.Targets))
-					for i, target := range ddbLogConfig.Targets {
-						this.logConfig[i] = *target
-					}
+					this.logConfig = ddbLogConfig.newLogConfig()
 					this.submitConfigAndSync(this.logConfig)
 					// //Setup the intfs using new config
 					// this.setupTargets()
@@ -530,10 +521,7 @@ func (this *logManagerInstance) SetupDeviceDBConfig() (err error) {
 				var origLogConfig, updatedLogConfig maestroSpecs.LogConfigPayload
 				//Provide a copy of current log config monitor to Config monitor, not the actual config we use, this would prevent config monitor
 				//directly updating the running config(this.logConfig).
-				for _, target := range this.logConfig {
-					target := target
-					origLogConfig.Targets = append(origLogConfig.Targets, &target)
-				}
+				origLogConfig = this.logConfig.newLogConfigPayload()
 
 				//Adding monitor config
 				this.ddbConfigMonitor.AddMonitorConfig(&origLogConfig, &updatedLogConfig, DDB_LOG_CONFIG_NAME, configLogAna)
@@ -556,10 +544,15 @@ func GetLogLibVersion() string {
 func InitLogManager(config *maestroConfig.YAMLMaestroConfig) (err error) {
 
 	inst := GetInstance()
-	inst.logConfig = config.Targets
 	inst.ddbConnConfig = config.DDBConnConfig
 
-	log.MaestroInfof("LogManager: Initializing %v %v\n", inst.logConfig, inst.ddbConnConfig)
+	// convert from an array of objects to an array of pointers to object
+	for _, target := range config.Targets {
+		target := target
+		inst.logConfigPayload.Targets = append(inst.logConfigPayload.Targets, &target)
+	}
+
+	log.MaestroInfof("LogManager: Initializing %v %v\n", inst.logConfigPayload, inst.ddbConnConfig)
 
 	greasego.StartGreaseLib(func() {
 		debugging.DEBUG_OUT("Grease start cb: Got to here 1\n")
@@ -601,6 +594,10 @@ func InitLogManager(config *maestroConfig.YAMLMaestroConfig) (err error) {
 	} else {
 		fmt.Printf("Symphony / RMI API server not configured.\n")
 	}
+
+	// TODO: read from maestrodb
+
+	// TODO: read from devicedb
 
 	debugging.DEBUG_OUT("targets:", len(config.Targets))
 	for n := 0; n < len(config.Targets); n++ {

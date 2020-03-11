@@ -91,7 +91,7 @@ type changes struct {
 	curvals    []reflect.Value
 	//	curValues   []reflect.Value
 	configgroup string // which config group this is
-	index	[]int; // this is valid if the value is >=0, in that case it indicates the index of the item in a slice
+	index       []int  // this is valid if the value is >=0, in that case it indicates the index of the item in a slice
 }
 
 func (a *ConfigAnalyzer) callGroupChanges(c *changes) {
@@ -102,7 +102,7 @@ func (a *ConfigAnalyzer) callGroupChanges(c *changes) {
 		if ok2 {
 			hook.ChangesStart(c.configgroup)
 			for n, fieldname := range c.fieldnames {
-				
+
 				takeit := hook.SawChange(c.configgroup, fieldname, c.futvals[n].Interface(), c.curvals[n].Interface(), c.index[n])
 				if takeit {
 					c.curvals[n].Set(c.futvals[n])
@@ -169,7 +169,7 @@ func (a *ConfigAnalyzer) DiffChanges(current interface{}, future interface{}) (i
 			return
 		}
 
-		//fmt.Printf("Vals: \n\tfut %v kind: %s \n\tcurr %v kind: %s\n", futValue, reflect.ValueOf(futValue).Kind(), currValue, reflect.ValueOf(currValue).Kind())
+		fmt.Printf("Vals: \n\tfut %v kind: %s \n\tcurr %v kind: %s\n", futValue, reflect.ValueOf(futValue).Kind(), currValue, reflect.ValueOf(currValue).Kind())
 		// using the current struct, walk through each field
 		//		assignToStruct := reflect.ValueOf(opts).Elem()
 		for i := 0; i < currType.NumField(); i++ {
@@ -358,8 +358,8 @@ func (a *ConfigAnalyzer) DiffChanges(current interface{}, future interface{}) (i
 // NOTE: Technically current and future can have different types, but must have fields with the same names to be compared. The function
 // will only look at field names which are in 'current' and which are public, and which have identical types.
 func (a *ConfigAnalyzer) CallChanges(current interface{}, future interface{}) (identical bool, noaction bool, err error) {
-	
-	identical, noaction, allchanges, err := a.DiffChanges(current, future) 
+
+	identical, noaction, allchanges, err := a.DiffChanges(current, future)
 
 	// walk through changes, calling the callbacks as needed
 	if !noaction {
