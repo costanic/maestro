@@ -208,6 +208,15 @@ type DDBConfig struct {
 	ConfigClient *DDBRelayConfigClient
 }
 
+func (rcc *DDBRelayConfigClient) IsConnected() bool {
+	_, err := rcc.Client.Get(context.Background(), rcc.Bucket, []string{"NULL"})
+	if err != nil {
+		log.MaestroErrorf("DDBRelayConfigClient.isConnected(): Not Connected. Error: %v", err)
+		return false
+	}
+	return true
+}
+
 // Get function will get the config with the expecting format and fill it into the parameter t.
 // It will return nil error when there is no such config exists or the config value could be
 // parsed as the format that client specified, otherwise it will return false when the config
