@@ -42,7 +42,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/armPelionEdge/greasego"
+	"github.com/armPelionEdge/maestro/greasego"
 	"github.com/armPelionEdge/maestro/configMgr"
 	"github.com/armPelionEdge/maestro/configs"
 	"github.com/armPelionEdge/maestro/debugging"

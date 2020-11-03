@@ -16,7 +16,7 @@ package wwrmi
 // limitations under the License.
 
 import (
-	"github.com/armPelionEdge/greasego"
+	"github.com/armPelionEdge/maestro/greasego"
 	"github.com/armPelionEdge/maestro/debugging"
 	"sync"
 )

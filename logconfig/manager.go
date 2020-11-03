@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/armPelionEdge/greasego"
+	"github.com/armPelionEdge/maestro/greasego"
 	"github.com/armPelionEdge/maestro/debugging"
 	"github.com/armPelionEdge/maestro/defaults"
 	"github.com/armPelionEdge/maestro/log"

@@ -27,7 +27,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 	//	"github.com/armPelionEdge/mustache"
-	"github.com/armPelionEdge/greasego"
+	"github.com/armPelionEdge/maestro/greasego"
 	"github.com/armPelionEdge/maestro/configs"
 	"github.com/armPelionEdge/maestro/debugging"
 	. "github.com/armPelionEdge/maestro/defaults"

@@ -20,7 +20,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"github.com/armPelionEdge/greasego"
+	"github.com/armPelionEdge/maestro/greasego"
 	"github.com/armPelionEdge/maestro/debugging"
 	"github.com/armPelionEdge/maestro/events"
 	"github.com/armPelionEdge/maestro/log"
