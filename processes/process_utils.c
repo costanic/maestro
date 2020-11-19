@@ -27,10 +27,6 @@
 // Linux only:
 #include <sys/prctl.h>
 
-#include <uv.h>
-
-#include "grease_lib.h"
-
 #define DEBUG_MAESTRO_NATIVE 1
 #include "process_utils.h"
 

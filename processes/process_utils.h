@@ -18,9 +18,11 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+
+#include <grease/grease_lib.h>
+
 #include <unistd.h>
 #include <stdint.h>
-#include "grease_lib.h"
 
 #define PROCESS_USE_PGID 0x1
 #define PROCESS_NEW_SID 0x2  // overrides the above

@@ -23,24 +23,22 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 */
+#ifndef _greasego_bindings_H_
+#define _greasego_bindings_H_
 
+#include <grease/grease_lib.h>
 
-#ifndef Callbacks_H_
-#define Callbacks_H_
+extern void greasego_startGreaseLibCB(int in);
+extern void greasego_addTargetCB(GreaseLibError *err, void *d);
+extern int greasego_wrapper_addTarget(GreaseLibTargetOpts *opts);
+extern int greasego_wrapper_modifyDefaultTarget(GreaseLibTargetOpts *opts);
+extern void greasego_commonTargetCB(GreaseLibError *err, void *d, uint32_t targetId);
+extern void greasego_setSelfOriginLabel(char *s) ;
 
-#include "greaseLib/grease_lib.h"
+extern void greasego_childClosedFDCallback (GreaseLibError *err, int stream_type, int fd);
+extern void zero_meta( logMeta *m );
 
-void greasego_startGreaseLibCB(int in);
-void greasego_addTargetCB(GreaseLibError *err, void *d);
-int greasego_wrapper_addTarget(GreaseLibTargetOpts *opts);
-int greasego_wrapper_modifyDefaultTarget(GreaseLibTargetOpts *opts);
-void greasego_commonTargetCB(GreaseLibError *err, void *d, uint32_t targetId);
-void greasego_setSelfOriginLabel(char *s) ;
-
-void greasego_childClosedFDCallback (GreaseLibError *err, int stream_type, int fd);
-void zero_meta( logMeta *m );
-
-void greasego_reset_all_logMetas();
+extern void greasego_reset_all_logMetas();
 
 extern logMeta go_meta_info;
 extern logMeta go_meta_warning;
@@ -53,4 +51,5 @@ extern logMeta go_self_meta_warning;
 extern logMeta go_self_meta_error;
 extern logMeta go_self_meta_debug;
 extern logMeta go_self_meta_success;
+
 #endif

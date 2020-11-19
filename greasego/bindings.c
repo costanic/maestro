@@ -21,12 +21,10 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     SOFTWARE.
 */
-
 #include "bindings.h"
 
-#include <greaseLib/grease_lib.h>
-
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef IF_DBG 
 #undef IF_DBG
@@ -47,6 +45,7 @@
 #define DBG_OUT(s,...) {}
 #define IF_DBG( x ) {}
 #endif
+
 
 // Go Functions
 extern void do_startGreaseLib_cb();
